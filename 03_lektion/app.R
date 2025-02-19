@@ -1,9 +1,12 @@
 library(shiny)
 library(tidyverse)
+library(bslib)
+library(bsicons)
 
 #Skal ikke sættes når app'en skal deployes. Det er kun til lokal testning
 #setwd("C:/Users/sibe/OneDrive - EaDania/Datavisualisering/2025/GitHub/03_lektion_shiny/03_lektion")
 
+day <- readRDS("C:/Users/sibe/OneDrive - EaDania/Datavisualisering/2025/GitHub/03_lektion_shiny/03_lektion/model/day.Rds") 
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -22,6 +25,15 @@ ui <- fluidPage(
         
             div(img(height = 65, width = 80, src = "dania_logo.png"), # Her indsætter jeg et logo
               style = "text-align: center;"),
+
+
+# Day selector ------------------------------------------------------------
+
+numericInput("sel_day",
+             "Select a number to return a day",
+             min = "1",
+             max = "7",
+             value = "1"),
           
 
 # Slider ------------------------------------------------------------------
@@ -35,8 +47,10 @@ ui <- fluidPage(
 
         # Show a plot of the generated distribution
         mainPanel(
-          tabsetPanel(tabPanel("Plot 1",
-                      plotOutput("distPlot")),
+          tabsetPanel(tabPanel("Day",
+                               uiOutput("day")),
+                               tabPanel("Plot 1",
+                      plotOutput("plot1")),
                       tabPanel("Plot 2",
                                sliderInput("hej",
                                            "Test",
@@ -45,7 +59,7 @@ ui <- fluidPage(
                                            step = 1,
                                            value = 5),
                                hr(),
-                               plotOutput("ggplot")))
+                               plotOutput("plot2")))
            
         )
     )
@@ -53,6 +67,22 @@ ui <- fluidPage(
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
+  
+  # Value box day
+  
+  output$day <- renderUI({
+    
+    day <- day()
+    
+    weekday <- day(input$sel_day)
+    
+    bslib::value_box(title = "The chosen day is:",
+                     value = weekday,
+                     showcase = bs_icon("bank2"),
+                     class = "bg-danger")
+    
+  })
+  
   
   output$slider_ui <- renderUI({
     
@@ -69,7 +99,7 @@ server <- function(input, output) {
   })
   
 
-    output$distPlot <- renderPlot({
+    output$plot1 <- renderPlot({
       
         # generate bins based on input$bins from ui.R
         x    <- faithful[, 2]
@@ -82,13 +112,13 @@ server <- function(input, output) {
     })
     
     
-    output$ggplot <- renderPlot({
+    output$plot2 <- renderPlot({
       
-      #print(passat())
+      print(passat())
       
-      passat <- readxl::read_excel("data/passat.xlsx")
-      
-      print(passat)
+      # passat <- readxl::read_excel("data/passat.xlsx")
+      # 
+      # print(passat)
       
       # generate bins based on input$bins from ui.R
       x    <- faithful[, 2]
@@ -107,10 +137,20 @@ server <- function(input, output) {
     
     passat <- reactive({
       
-      passat <- readxl::read_excel("data/passat.xlsx") %>% 
+      passat <- readxl::read_excel("data/passat.xlsx") %>%
         filter(year >= 2014)
       
+      #rds <- readxl::read_excel("data/passat.xlsx")
+      
+      
     })
+    
+    day <- reactive({
+      
+      day <- readRDS("model/day.Rds")
+      
+    })
+    
 }
 
 # Run the application 
