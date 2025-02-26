@@ -7,8 +7,8 @@ library(DT)
 library(googlesheets4)
 
 gs4_auth(
-  cache = ".token",
-  email = "sibe@eadania.dk"
+  cache = "xxxx",
+  email = "xxxx"
 )
 
 #Skal ikke sættes når app'en skal deployes. Det er kun til lokal testning
@@ -92,14 +92,14 @@ server <- function(input, output) {
     
     print(newRow)
     
-    sheet_append("1Eu0HpYfNCMTB5qdW3dAulP_obU-OnDNXsHN6jjpJkOs", newRow, sheet = 1)
+    sheet_append("xxxx", newRow, sheet = 1) # Kun ID
     
   })
   
   
   df <- eventReactive(input$indlæs, {
     
-    read_sheet("https://docs.google.com/spreadsheets/d/1Eu0HpYfNCMTB5qdW3dAulP_obU-OnDNXsHN6jjpJkOs/edit?gid=0#gid=0",
+    read_sheet("xxxxxxx", # Fuld url
                range = "Ark1")
 
   })
@@ -107,8 +107,6 @@ server <- function(input, output) {
   output$tabel <- renderDataTable({
     
     print(df())
-    
-    DT::datatable(df())
     
   })
   
