@@ -2,11 +2,21 @@ library(shiny)
 library(tidyverse)
 library(bslib)
 library(bsicons)
+library(DT)
+
+library(googlesheets4)
+
+gs4_auth(
+  cache = ".token",
+  email = "sibe@eadania.dk"
+)
 
 #Skal ikke sættes når app'en skal deployes. Det er kun til lokal testning
 #setwd("C:/Users/sibe/OneDrive - EaDania/Datavisualisering/2025/GitHub/03_lektion_shiny/03_lektion")
 
-day <- readRDS("C:/Users/sibe/OneDrive - EaDania/Datavisualisering/2025/GitHub/03_lektion_shiny/03_lektion/model/day.Rds") 
+day <- readRDS("model/day.Rds") 
+
+
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -40,7 +50,11 @@ numericInput("sel_day",
 
           
             uiOutput("slider_ui")
-        ),
+        ,
+
+actionButton("tilføj", "Tilføj observation"),
+br(),
+actionButton("indlæs", "Indlæs data")),
 
 # Main panel --------------------------------------------------------------
 
@@ -48,6 +62,7 @@ numericInput("sel_day",
         # Show a plot of the generated distribution
         mainPanel(
           tabsetPanel(tabPanel("Day",
+                               tableOutput("tabel"),
                                uiOutput("day")),
                                tabPanel("Plot 1",
                       plotOutput("plot1")),
@@ -68,6 +83,37 @@ numericInput("sel_day",
 # Define server logic required to draw a histogram
 server <- function(input, output) {
   
+  # Aktiv min actionbutton
+  
+  observeEvent(input$tilføj, {
+    
+    newRow <- data.frame(day = input$sel_day,
+                         year = input$bins)
+    
+    print(newRow)
+    
+    sheet_append("1Eu0HpYfNCMTB5qdW3dAulP_obU-OnDNXsHN6jjpJkOs", newRow, sheet = 1)
+    
+  })
+  
+  
+  df <- eventReactive(input$indlæs, {
+    
+    read_sheet("https://docs.google.com/spreadsheets/d/1Eu0HpYfNCMTB5qdW3dAulP_obU-OnDNXsHN6jjpJkOs/edit?gid=0#gid=0",
+               range = "Ark1")
+
+  })
+  
+  output$tabel <- renderDataTable({
+    
+    print(df())
+    
+    DT::datatable(df())
+    
+  })
+  
+  
+  
   # Value box day
   
   output$day <- renderUI({
@@ -79,7 +125,7 @@ server <- function(input, output) {
     bslib::value_box(title = "The chosen day is:",
                      value = weekday,
                      showcase = bs_icon("bank2"),
-                     class = "bg-danger")
+                     theme = "bg-danger")
     
   })
   
@@ -114,7 +160,7 @@ server <- function(input, output) {
     
     output$plot2 <- renderPlot({
       
-      print(passat())
+      #print(passat())
       
       # passat <- readxl::read_excel("data/passat.xlsx")
       # 
